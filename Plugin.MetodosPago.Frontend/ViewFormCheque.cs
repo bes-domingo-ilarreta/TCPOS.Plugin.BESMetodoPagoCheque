@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using TCPOS.DbHelper;
+using TCPOS.Debug;
 using TCPOS.FrontEnd.BusinessLogic;
 using TCPOS.FrontEnd.BusinessLogic.Plugins;
 using TCPOS.FrontEnd.DataClasses;
@@ -19,8 +21,7 @@ namespace Plugin.MetodosPago.Frontend
     {
         private BLogic BL;
 
-        // Variables Cheque
-               
+        // Variables Cheque              
         public String CampoBanco;
         public long CampoNroCheque;
         public decimal CampoMonto;
@@ -30,7 +31,7 @@ namespace Plugin.MetodosPago.Frontend
         public DateTime CampoFechaCheque;
         public long CampoNroCuentaCte;
         public long CampoCodigoAuthCheque;
-        
+
 
         public void SetupForm(BLogic BL)
         {
@@ -38,13 +39,23 @@ namespace Plugin.MetodosPago.Frontend
             UserInterfaceHelper.TranslateForm(this);
             UserInterfaceHelper.CenterWindow(this);
             UserInterfaceHelper.VisibleForms.Add(this);
-        }
-        public ViewFormCheque()
-        {
-            InitializeComponent();
-                      
+                       
+            DataTable bancos = BL.DB.ExecuteDataTable("SELECT id, description FROM bes_banks WHERE status=0 ORDER BY description");
+            int contador = bancos.Rows.Count;
+            var dataSource = new List<TestObject>();
+            foreach (DataRow banco in bancos.Rows)
+            {
+                String description = banco["description"].ToString();
+                int id = SafeConvert.ToInt32(banco["id"]);                
+                dataSource.Add(new TestObject() { Name = description, Value = id });
+            }           
+            this.x_banco_cheque.DataSource = dataSource;
+            this.x_banco_cheque.DisplayMember = "Name";
+            this.x_banco_cheque.ValueMember = "Value";
+            this.x_banco_cheque.DropDownStyle = ComboBoxStyle.DropDownList;
+
             // Dia
-            for (int i = 1; i <= 31; i++){x_dia_cheque.Items.Add(i.ToString());}
+            for (int i = 1; i <= 31; i++) { x_dia_cheque.Items.Add(i.ToString()); }
             // Mes
             for (int i = 1; i <= 12; i++) { x_mes_cheque.Items.Add(i.ToString()); }
             // Año
@@ -52,52 +63,32 @@ namespace Plugin.MetodosPago.Frontend
             // Colores --> Verde: #2a9800 - Rojo: #d74a2b - Naranja: #ffa909
             aceptar.BackColor = ColorTranslator.FromHtml("#2a9800");
             cancelar.BackColor = ColorTranslator.FromHtml("#d74a2b");
-            
-            // Bancos
-            x_banco_cheque.Items.Add("Banco de Chile");
-            x_banco_cheque.Items.Add("BBVA Chile");
-            x_banco_cheque.Items.Add("Scotiabank Chile");
-            x_banco_cheque.Items.Add("Banco Internacional");
-            x_banco_cheque.Items.Add("Banco de Crédito e Inversiones");
-            x_banco_cheque.Items.Add("Corpbanca");
-            x_banco_cheque.Items.Add("Banco Bice");
-            x_banco_cheque.Items.Add("HSBC Bank (Chile)");
-            x_banco_cheque.Items.Add("Banco Santander (Chile)");
-            x_banco_cheque.Items.Add("Banco Itaú Chile");
-            x_banco_cheque.Items.Add("Banco Security");
-            x_banco_cheque.Items.Add("Banco Falabella");
-            x_banco_cheque.Items.Add("Deutsche Bank (Chile)");
-            x_banco_cheque.Items.Add("Banco Ripley");
-            x_banco_cheque.Items.Add("Rabobank Chile");
-            x_banco_cheque.Items.Add("Banco Consorcio");
-            x_banco_cheque.Items.Add("Banco Penta");
-            x_banco_cheque.Items.Add("Banco Paris");
-            x_banco_cheque.Items.Add("Banco Bilbao Vizcaya Argentaria");
-
+            // Valores de Prueba por Defecto                       
             /*
-            x_banco_cheque.Text = "Banco de Chile";
-            x_numero_cheque.Text = "0987654";
-            //x_monto.Text = "5000";
-            x_tasas_interes.Text = "1";
+            x_numero_cheque.Text = "0987654";            
+            x_tasas_interes.Text = "1.00";
             rut_cheque.Text = "12345678A";
-            x_nombre_completo_cheque.Text = "Domingo Ilarreta";
-            x_dia_cheque.Text = "6";
-            x_mes_cheque.Text = "6";
-            x_anio_cheque.Text = "2016";
+            x_nombre_completo_cheque.Text = "Domingo José Ilarreta Heydras";
+            x_dia_cheque.Text = DateTime.Now.ToString("dd");
+            x_mes_cheque.Text = DateTime.Now.ToString("MM");
+            x_anio_cheque.Text = DateTime.Now.ToString("yyyy");
             nro_cta_corriente.Text = "09876543";
             x_cod_auth_cheque.Text = "098768000000";
+            x_monto.Text = BL.CurrentTransaction.FoodToPay().ToString();
             */
+        }
+        public ViewFormCheque()
+        {
+            InitializeComponent();                   
         }
 
         public void ViewFormCheque_Load(object sender, EventArgs e)
         {
-             x_monto.Text = BL.CurrentTransaction.FoodToPay().ToString();
-            
         }
 
         private void button1_Click(object sender, EventArgs e)
-        {
-            this.DialogResult = DialogResult.OK;
+        {            
+            this.DialogResult = DialogResult.OK;            
             UserInterfaceHelper.VisibleForms.Remove(this);
         }       
 
@@ -106,90 +97,138 @@ namespace Plugin.MetodosPago.Frontend
 
         }
 
+        
         private void aceptar_Click(object sender, EventArgs e)
         {
-            
-            String linea;
-            bool valor = true;          
+            String linea;                       
+            bool valor = true;
+            String color_valido = "#FFFFFF";
+            String color_invalido = "#d74a2b";
+         
             // 1 Nombre Banco 
-
-            if (x_banco_cheque.Text == "" || x_banco_cheque.Text == null) { valor = false; x_banco_cheque.BackColor = ColorTranslator.FromHtml("#d74a2b"); } else { CampoBanco = x_banco_cheque.Text; x_banco_cheque.BackColor = ColorTranslator.FromHtml("#FFFFFF"); }
-            if (x_numero_cheque.Text == "" || x_numero_cheque.Text == null) { valor = false; } else { CampoNroCheque = long.Parse(x_numero_cheque.Text); }
-            if (x_monto.Text == "" || x_monto.Text == null) { valor = false; } else { CampoMonto = decimal.Parse(x_monto.Text); }
-            if (x_tasas_interes.Text == "" || x_tasas_interes.Text == null) { valor = false; } else { CampoTasaInteres = decimal.Parse(x_tasas_interes.Text); }
-            if (rut_cheque.Text == "" || rut_cheque.Text == null) { valor = false; } else { CampoRutCheque = rut_cheque.Text; }
-            if (x_nombre_completo_cheque.Text == "" || x_nombre_completo_cheque.Text == null) { valor = false; } else { CampoNombre = x_nombre_completo_cheque.Text; }
-            if ((x_dia_cheque.Text == "" || x_dia_cheque.Text == null) || (x_mes_cheque.Text == "" || x_mes_cheque.Text == null) || (x_anio_cheque.Text == "" || x_anio_cheque.Text == null)) 
-            { valor = false;
+            if (x_banco_cheque.Text == "" || x_banco_cheque.Text == null) 
+            { 
+                valor = false; 
+                x_banco_cheque.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else {
+                CampoBanco = x_banco_cheque.SelectedValue.ToString(); 
+                x_banco_cheque.BackColor = ColorTranslator.FromHtml(color_valido); 
             }
-            else
+
+            if (x_numero_cheque.Text == "" || x_numero_cheque.Text == null) 
+            { 
+                valor = false; 
+                x_numero_cheque.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoNroCheque = long.Parse(x_numero_cheque.Text); 
+                x_numero_cheque.BackColor = ColorTranslator.FromHtml(color_valido); 
+            }
+            if (x_monto.Text == "" || x_monto.Text == null) 
+            { 
+                valor = false; 
+                x_monto.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoMonto = decimal.Parse(x_monto.Text); 
+                x_monto.BackColor = ColorTranslator.FromHtml(color_valido); 
+            }
+            if (x_tasas_interes.Text == "" || x_tasas_interes.Text == null) 
             {
+                CampoTasaInteres = 0;
+            } else { 
+                CampoTasaInteres = decimal.Parse(x_tasas_interes.Text); 
+            }
+            if (rut_cheque.Text == "" || rut_cheque.Text == null) 
+            { 
+                valor = false; 
+                rut_cheque.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoRutCheque = rut_cheque.Text; 
+                rut_cheque.BackColor = ColorTranslator.FromHtml(color_valido);
+            }
+            if (x_nombre_completo_cheque.Text == "" || x_nombre_completo_cheque.Text == null) 
+            { 
+                valor = false; 
+                x_nombre_completo_cheque.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoNombre = x_nombre_completo_cheque.Text; 
+                x_nombre_completo_cheque.BackColor = ColorTranslator.FromHtml(color_valido); 
+            }
+            if ((x_dia_cheque.Text == "" || x_dia_cheque.Text == null) || (x_mes_cheque.Text == "" || x_mes_cheque.Text == null) || (x_anio_cheque.Text == "" || x_anio_cheque.Text == null)) 
+            { 
+                valor = false;
+                x_dia_cheque.BackColor = ColorTranslator.FromHtml(color_invalido);
+                x_mes_cheque.BackColor = ColorTranslator.FromHtml(color_invalido);
+                x_anio_cheque.BackColor = ColorTranslator.FromHtml(color_invalido);
+
+            }else {
+                x_dia_cheque.BackColor = ColorTranslator.FromHtml(color_valido);
+                x_mes_cheque.BackColor = ColorTranslator.FromHtml(color_valido);
+                x_anio_cheque.BackColor = ColorTranslator.FromHtml(color_valido);
                 linea = x_dia_cheque.Text + "-" + x_mes_cheque.Text + "-" + x_anio_cheque.Text;
                 CampoFechaCheque = Convert.ToDateTime(linea);
             }
-            if (nro_cta_corriente.Text == "" || nro_cta_corriente.Text == null) { valor = false; } else { CampoNroCuentaCte = long.Parse(nro_cta_corriente.Text); }
-            if (x_cod_auth_cheque.Text == "" || x_cod_auth_cheque.Text == null) { valor = false; } else { CampoCodigoAuthCheque = long.Parse(x_cod_auth_cheque.Text); }
+            if (nro_cta_corriente.Text == "" || nro_cta_corriente.Text == null) { 
+                valor = false; 
+                nro_cta_corriente.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoNroCuentaCte = long.Parse(nro_cta_corriente.Text); 
+                nro_cta_corriente.BackColor = ColorTranslator.FromHtml(color_valido);
+            }
+            if (x_cod_auth_cheque.Text == "" || x_cod_auth_cheque.Text == null) 
+            { 
+                valor = false; 
+                x_cod_auth_cheque.BackColor = ColorTranslator.FromHtml(color_invalido); 
+            } else { 
+                CampoCodigoAuthCheque = long.Parse(x_cod_auth_cheque.Text);
+                x_cod_auth_cheque.BackColor = ColorTranslator.FromHtml(color_valido); 
+            }           
             
-            //if (!(File.Exists(@"C:\TCPOS.NET\FrontEnd\Traces\cheque.txt"))) {  }
-            //File.Create(@"C:\TCPOS.NET\FrontEnd\Traces\cheque.txt");
             if (valor == true)
             {
-                CampoBanco = x_banco_cheque.Text;
-                CampoNroCheque = long.Parse(x_numero_cheque.Text);
-                CampoMonto = decimal.Parse(x_monto.Text);
-                CampoTasaInteres = decimal.Parse(x_tasas_interes.Text);
-                CampoRutCheque = rut_cheque.Text;
-                CampoNombre = x_nombre_completo_cheque.Text;
-                linea = x_dia_cheque.Text + "-" + x_mes_cheque.Text + "-" + x_anio_cheque.Text;
-                CampoFechaCheque = Convert.ToDateTime(linea);
-                CampoNroCuentaCte = long.Parse(nro_cta_corriente.Text);
-                CampoCodigoAuthCheque = long.Parse(x_cod_auth_cheque.Text);
-
-
                 String all;
-                all = CampoBanco + ";";
+                all =  CampoBanco + ";";
+                all += CampoRutCheque + ";";
+                all += CampoNroCuentaCte.ToString() + ";";                
                 all += CampoNroCheque.ToString() + ";";
                 all += CampoMonto.ToString() + ";";
-                all += CampoTasaInteres.ToString() + ";";
-                all += CampoRutCheque + ";";
+                all += CampoCodigoAuthCheque.ToString() + ";";
                 all += CampoNombre + ";";
-                all += CampoFechaCheque.ToString() + ";";
-                all += CampoNroCuentaCte.ToString() + ";";
-                all += CampoCodigoAuthCheque.ToString() + "";
-
-                File.WriteAllText(@"C:\TCPOS.NET\FrontEnd\Traces\cheque.txt", all);
-
+                all += CampoTasaInteres.ToString() + ";";              
+                all += CampoFechaCheque.ToString() + "";               
+                
+                
                 // Cerrar Formulario Emergente "Datos Cheque"
                 this.DialogResult = DialogResult.OK;
                 UserInterfaceHelper.VisibleForms.Remove(this);
-            }
-            
-            /*
-            if (valor!= false)
-            {
-                if (!System.IO.File.Exists(@"C:\TCPOS.NET\FrontEnd\Traces\cheque.txt"))
+                // Obtiene el Payment ID -- Cheque (El Payment type Cheque en el Kernel siempre será 5)
+                String paymentID = BL.DB.ExecuteScalar("SELECT id  FROM payments WHERE payment_type=5 LIMIT 1").ToString();
+                BL.CurrentTransaction.AddPayment(int.Parse(paymentID), 0, 0, SafeConvert.ToDecimal(x_monto.Text));
+                ArrayList payments = BL.CurrentTransaction.GetItems(typeof(TransPayment));
+                //pay.Data.Notes = payments.Count.ToString();
+                foreach (TransPayment pay in payments)
                 {
-                    System.IO.File.Create(@"C:\TCPOS.NET\FrontEnd\Traces\cheque.txt");
-
+                    if (pay.Data.Type.ToString() == "Cheque")
+                    {
+                        if (pay.Data.Notes == "" || pay.Data.Notes == null)
+                        {                            
+                            pay.Data.Notes = all;
+                            //pay.Data.Description = "PAY Type: " + pay.Data.Type.ToString() + ") " + pay.Data.Description + "\n" + campos[0];
+                        }  
+                    }
                     
                 }
-            } 
-             */
-            // Creando el Archivo
-            //BL.CurrentTransaction.AddPayment(2, 2, 1, CampoMonto);
-            //BL.CurrentTransaction.TransNum = 1;
-            //BL.CurrentTransaction.AddCashBack();
-            //BL.RefreshTransactionItems();
-            //BL.CurrentTransaction.TransNum = 1;
-            //BL.MsgError(CampoMonto.ToString());
-            //BL.CleanDumpTransaction(); 
-            // Central
-            //BL.DB.CentralDbExecuteNonQuery();
+                BL.RefreshTransactionItems();
+                
+                decimal monto_faltante = 0;
+
+                if ((monto_faltante == BL.CurrentTransaction.FoodToPay()))
+                {
+                    BL.ProcessTotalKey();
+                }                               
+            }
+            //BL.CleanDumpTransaction();     
             //BL.DB.LocalDbToRefresh();
-            
             //BL.CurrentTransaction.ManualPrintoutSelected = DbPayment.PrintoutType.Bill;           
-                       
-            //INSERT INTO articles (id,code,description,visibility_criteria_id) VALUES (" + next_id + "," + codigoExample + "," + SqlHelper.Quote(descriptionExample) + ",1)");
             //BL.CurrentTransaction.Resumed;
         }
 

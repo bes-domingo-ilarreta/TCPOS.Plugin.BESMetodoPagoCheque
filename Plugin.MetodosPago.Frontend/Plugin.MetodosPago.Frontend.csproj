@@ -78,6 +78,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
+    <Compile Include="TransTableBesCheque.cs" />
     <Compile Include="Validates.cs" />
     <Compile Include="ViewFormCheque.cs">
       <SubType>Form</SubType>

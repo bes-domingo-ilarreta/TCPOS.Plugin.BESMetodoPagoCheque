@@ -6,89 +6,48 @@ using TCPOS.FrontEnd.DataClasses;
 
 namespace Plugin.MetodosPago.Frontend
 {
-    
-    public class TipoPagoChequeCabecera : LocalDBClassBase
-    {        
+   
+    public class TipoPagoCheque : LocalDBClassBase
+    {
         /* ################################## */
-        // [DbTable("bes_cheque_c")]
+        // [DbTable("bes_cheque")]
+        /* ################################## */
+        [DbField("shop_id")]
+        public int shop_id;
+        [DbField("till_id")]
+        public int till_id;
+        [DbField("trans_num")]
+        public int trans_num;
+        [DbField("bank_id")]
+        public int bank_id; 
+        [DbField("rut_cheque")]
+        public String rut_cheque;
+        [DbField("nro_cta_corriente")]
+        public String nro_cta_corriente;
+        [DbField("nro_cheque")]
+        public String nro_cheque;
+        [DbField("monto")]
+        public decimal monto;
+        [DbField("code_auth")]
+        public String code_auth;
+        [DbField("nombre_completo")]
+        public String nombre_completo;
+        [DbField("tasas")]
+        public decimal tasas;
+        [DbField("fecha")]
+        public DateTime fecha;
+    }
+    public class BesBanks : LocalDBClassBase
+    {
+        /* ################################## */
+        // [DbTable("bes_banks")]
         /* ################################## */
         [DbField("id")]
         public int id;
-        [DbField("transaction_id")]
-        public int transaction_id;
-        [DbField("rut_cheque")]
-        public String rut_cheque;
-        [DbField("nombre")]
-        public String nombre;
-        [DbField("cant_cheques")]
-        public int cant_cheques;
-        [DbField("fecha_cheque")]
-        public DateTime fecha_cheque;
-        [DbField("monto")]
-        public decimal monto;
-        [DbField("tasa_interes")]
-        public double tasa_interes; 
-        
-
-    }
-
-    public class TipoPagoChequeDetalle : LocalDBClassBase
-    {
-        /* ################################## */
-        // [DbTable("bes_cheque_d")]
-        /* ################################## */
-        [DbField("bes_cheque_c_id")]
-        public int bes_cheque_c_id;
-        [DbField("rut_cheque")]
-        public String rut_cheque;
-        [DbField("banco")]
-        public String banco;
-        [DbField("cta_cte")]
-        public int cta_cte;
-        [DbField("num_cheque")]
-        public int num_cheque;
-        [DbField("monto")]
-        public decimal monto;
-        [DbField("autorizacion")]
-        public String autorizacion;
-    }
-
-    public class TipoPagoDebito : LocalDBClassBase
-    {
-        /* ################################## */
-        // [DbTable("bes_debito")]
-        /* ################################## */        
-        [DbField("transaction_id")]
-        public int transaction_id;
-        [DbField("num_td")]
-        public int num_td;
-        [DbField("num_operacion")]
-        public int num_operacion;
-        [DbField("monto")]
-        public decimal monto;
-        [DbField("autorizacion")]
-        public String autorizacion;
-    }
-
-    public class TipoPagoCredito : LocalDBClassBase
-    {
-        /* ################################## */
-        // [DbTable("bes_credito")]
-        /* ################################## */
-        [DbField("transaction_id")]
-        public int transaction_id;
-        [DbField("num_tc")]
-        public int num_tc;
-        [DbField("tipo_tc")]
-        public String tipo_tc;
-        [DbField("cuotas")]
-        public int cuotas;
-        [DbField("num_operacion")]
-        public int num_operacion;
-        [DbField("monto")]
-        public decimal monto;
-        [DbField("autorizacion")]
-        public String autorizacion;
+        [DbField("description")]
+        public String description;
+        [DbField("status")]
+        public int status;        
     }
     
 }
