@@ -62,10 +62,11 @@ namespace Plugin.MetodosPago.Frontend
                     // nombre_completo
                     String nombre_completo = campo[6];
                     // tasas
-                    decimal tasas = 2;
+                    decimal tasas = decimal.Parse(campo[7]);
                     // fecha                    
-                    linea = DateTime.Now.ToString("dd") + "-" + DateTime.Now.ToString("MM") + "-" + DateTime.Now.ToString("yyyy");
-                    DateTime fecha = Convert.ToDateTime(linea);
+                    //linea = DateTime.Now.ToString("dd") + "-" + DateTime.Now.ToString("MM") + "-" + DateTime.Now.ToString("yyyy");
+                    //DateTime fecha = Convert.ToDateTime(linea);
+                    DateTime fecha = Convert.ToDateTime(campo[8]);
 
                     TransTableBesCheque BesCheque = new TransTableBesCheque(BL.CurrentTransaction);
                     BesCheque.shop_id = shop_id;

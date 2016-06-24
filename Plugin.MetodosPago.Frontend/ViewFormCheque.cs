@@ -64,9 +64,9 @@ namespace Plugin.MetodosPago.Frontend
             aceptar.BackColor = ColorTranslator.FromHtml("#2a9800");
             cancelar.BackColor = ColorTranslator.FromHtml("#d74a2b");
             // Valores de Prueba por Defecto                       
-            /*
+            
             x_numero_cheque.Text = "0987654";            
-            x_tasas_interes.Text = "1.00";
+            //x_tasas_interes.Text = "2";
             rut_cheque.Text = "12345678A";
             x_nombre_completo_cheque.Text = "Domingo José Ilarreta Heydras";
             x_dia_cheque.Text = DateTime.Now.ToString("dd");
@@ -74,8 +74,9 @@ namespace Plugin.MetodosPago.Frontend
             x_anio_cheque.Text = DateTime.Now.ToString("yyyy");
             nro_cta_corriente.Text = "09876543";
             x_cod_auth_cheque.Text = "098768000000";
+            
             x_monto.Text = BL.CurrentTransaction.FoodToPay().ToString();
-            */
+           
         }
         public ViewFormCheque()
         {
@@ -194,44 +195,45 @@ namespace Plugin.MetodosPago.Frontend
                 all += CampoCodigoAuthCheque.ToString() + ";";
                 all += CampoNombre + ";";
                 all += CampoTasaInteres.ToString() + ";";              
-                all += CampoFechaCheque.ToString() + "";               
-                
-                
+                all += CampoFechaCheque.ToString() + "";
+
+                //BL.MsgInfo(BL.CurrentTransaction.FoodToPay().ToString());
                 // Cerrar Formulario Emergente "Datos Cheque"
                 this.DialogResult = DialogResult.OK;
                 UserInterfaceHelper.VisibleForms.Remove(this);
-                // Obtiene el Payment ID -- Cheque (El Payment type Cheque en el Kernel siempre será 5)
-                String paymentID = BL.DB.ExecuteScalar("SELECT id  FROM payments WHERE payment_type=5 LIMIT 1").ToString();
-                BL.CurrentTransaction.AddPayment(int.Parse(paymentID), 0, 0, SafeConvert.ToDecimal(x_monto.Text));
-                ArrayList payments = BL.CurrentTransaction.GetItems(typeof(TransPayment));
-                //pay.Data.Notes = payments.Count.ToString();
-                foreach (TransPayment pay in payments)
-                {
-                    if (pay.Data.Type.ToString() == "Cheque")
-                    {
-                        if (pay.Data.Notes == "" || pay.Data.Notes == null)
-                        {                            
-                            pay.Data.Notes = all;
-                            //pay.Data.Description = "PAY Type: " + pay.Data.Type.ToString() + ") " + pay.Data.Description + "\n" + campos[0];
-                        }  
-                    }
-                    
-                }
-                BL.RefreshTransactionItems();
-                
-                decimal monto_faltante = 0;
+                AddCheque(all);
 
-                if ((monto_faltante == BL.CurrentTransaction.FoodToPay()))
-                {
-                    BL.ProcessTotalKey();
-                }                               
+                if (BL.CurrentTransaction.FoodToPay() == 0 || BL.CurrentTransaction.FoodToPay() < 0) { BL.ProcessTotalKey(); }
+                if (BL.CurrentTransaction.FoodToPay() > 0) { BL.RefreshTransactionItems(); }
+                //if () { BL.ProcessTotalKey(); }                
             }
             //BL.CleanDumpTransaction();     
             //BL.DB.LocalDbToRefresh();
             //BL.CurrentTransaction.ManualPrintoutSelected = DbPayment.PrintoutType.Bill;           
             //BL.CurrentTransaction.Resumed;
+            // BL.CurrentTransaction.Total()
+            // BL.CurrentTransaction.TaxTotal()
         }
 
+        public void AddCheque(String all){
+            // Obtiene el Payment ID -- Cheque (El Payment type Cheque en el Kernel siempre será 5)
+            String paymentID = BL.DB.ExecuteScalar("SELECT id  FROM payments WHERE payment_type=5 LIMIT 1").ToString();
+            BL.CurrentTransaction.AddPayment(int.Parse(paymentID), 0, 0, SafeConvert.ToDecimal(x_monto.Text));
+            ArrayList payments = BL.CurrentTransaction.GetItems(typeof(TransPayment));
+            //pay.Data.Notes = payments.Count.ToString();
+            foreach (TransPayment pay in payments)
+            {
+                if (pay.Data.Type.ToString() == "Cheque")
+                {
+                    if (pay.Data.Notes == "" || pay.Data.Notes == null)
+                    {
+                        pay.Data.Notes = all;
+                        //pay.Data.Description = "PAY Type: " + pay.Data.Type.ToString() + ") " + pay.Data.Description + "\n" + campos[0];
+                    }
+                }
+
+            }
+        }
 
         private void x_banco_cheque_KeyPress(object sender, KeyPressEventArgs e)
         {
@@ -245,7 +247,8 @@ namespace Plugin.MetodosPago.Frontend
 
         private void monto_KeyPress(object sender, KeyPressEventArgs e)
         {
-            Validates.SoloNumerosDecimales(e,x_monto.Text);
+            //Validates.SoloNumerosDecimales(e,x_monto.Text);
+            Validates.SoloNumeros(e);
         }
 
         private void x_monto_KeyPress(object sender, KeyPressEventArgs e)
@@ -270,7 +273,8 @@ namespace Plugin.MetodosPago.Frontend
 
         private void x_tasas_interes_KeyPress(object sender, KeyPressEventArgs e)
         {
-            Validates.SoloNumerosDecimales(e, x_tasas_interes.Text); 
+            //Validates.SoloNumerosDecimales(e, x_tasas_interes.Text); 
+            Validates.SoloNumeros(e);
         }
 
         private void x_dia_cheque_SelectedIndexChanged(object sender, EventArgs e)

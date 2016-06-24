@@ -248,7 +248,7 @@
             // 
             this.x_tasas_interes.Font = new System.Drawing.Font("Microsoft Sans Serif", 15.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.x_tasas_interes.Location = new System.Drawing.Point(182, 298);
-            this.x_tasas_interes.MaxLength = 4;
+            this.x_tasas_interes.MaxLength = 1;
             this.x_tasas_interes.Name = "x_tasas_interes";
             this.x_tasas_interes.Size = new System.Drawing.Size(65, 31);
             this.x_tasas_interes.TabIndex = 8;
